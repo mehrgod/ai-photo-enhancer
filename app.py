@@ -59,7 +59,10 @@ def main():
         "and the local Ollama agent will suggest a lightweight enhancement pipeline."
     )
 
-    with st.sidebar:
+    if "enhance_ready" not in st.session_state:
+        st.session_state.enhance_ready = False
+
+    with st.sidebar.form(key="enhance_form"):
         st.header("📥 Input")
         uploaded_file = st.file_uploader(
             "Upload a portrait or selfie", type=["jpg", "jpeg", "png"]
@@ -70,6 +73,12 @@ def main():
         goal = st.selectbox("Choose a goal", GOALS)
 
         st.markdown("---")
+        enhance_button = st.form_submit_button("Enhance image")
+
+    if enhance_button:
+        st.session_state.enhance_ready = True
+
+    with st.sidebar:
         st.header("⚙️ Agent Settings")
         st.write("**Local model used for reasoning:**")
         st.code(MODEL_NAME, language="text")
@@ -81,7 +90,12 @@ def main():
 
     # Early exit if no image uploaded
     if uploaded_file is None:
+        st.session_state.enhance_ready = False
         st.info("👆 Upload an image to see the enhancement workflow.")
+        return
+
+    if not st.session_state.enhance_ready:
+        st.info("✅ Select a goal and press Enhance to start the workflow.")
         return
 
     # Load and display original image
