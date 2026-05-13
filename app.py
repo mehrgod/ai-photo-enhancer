@@ -56,11 +56,20 @@ def main():
     st.title("🎨 AI Portrait Enhancer")
     st.write(
         "Upload a portrait or selfie, choose an enhancement goal, "
-        "and the local Ollama agent will decide a lightweight pipeline."
+        "and the local Ollama agent will suggest a lightweight enhancement pipeline."
     )
 
-    # Sidebar: show model info
     with st.sidebar:
+        st.header("📥 Input")
+        uploaded_file = st.file_uploader(
+            "Upload a portrait or selfie", type=["jpg", "jpeg", "png"]
+        )
+
+        st.markdown("---")
+        st.header("🎯 Goal")
+        goal = st.selectbox("Choose a goal", GOALS)
+
+        st.markdown("---")
         st.header("⚙️ Agent Settings")
         st.write("**Local model used for reasoning:**")
         st.code(MODEL_NAME, language="text")
@@ -69,14 +78,6 @@ def main():
             + MODEL_NAME
             + "` is pulled locally."
         )
-
-    # File upload
-    uploaded_file = st.file_uploader(
-        "📸 Upload a portrait or selfie image", type=["jpg", "jpeg", "png"]
-    )
-
-    # Goal selection
-    goal = st.selectbox("🎯 Choose an enhancement goal", GOALS)
 
     # Early exit if no image uploaded
     if uploaded_file is None:
