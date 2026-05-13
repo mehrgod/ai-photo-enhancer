@@ -61,8 +61,9 @@ def main():
 
     if "enhance_ready" not in st.session_state:
         st.session_state.enhance_ready = False
+        st.session_state.uploaded_filename = None
 
-    with st.sidebar.form(key="enhance_form"):
+    with st.sidebar:
         st.header("📥 Input")
         uploaded_file = st.file_uploader(
             "Upload a portrait or selfie", type=["jpg", "jpeg", "png"]
@@ -73,12 +74,9 @@ def main():
         goal = st.selectbox("Choose a goal", GOALS)
 
         st.markdown("---")
-        enhance_button = st.form_submit_button("Enhance image")
+        enhance_button = st.button("Enhance image")
 
-    if enhance_button:
-        st.session_state.enhance_ready = True
-
-    with st.sidebar:
+        st.markdown("---")
         st.header("⚙️ Agent Settings")
         st.write("**Local model used for reasoning:**")
         st.code(MODEL_NAME, language="text")
@@ -88,17 +86,21 @@ def main():
             + "` is pulled locally."
         )
 
+    if uploaded_file is not None:
+        if st.session_state.uploaded_filename != uploaded_file.name:
+            st.session_state.uploaded_filename = uploaded_file.name
+            st.session_state.enhance_ready = False
+
+    if enhance_button:
+        st.session_state.enhance_ready = True
+
     # Early exit if no image uploaded
     if uploaded_file is None:
         st.session_state.enhance_ready = False
         st.info("👆 Upload an image to see the enhancement workflow.")
         return
 
-    if not st.session_state.enhance_ready:
-        st.info("✅ Select a goal and press Enhance to start the workflow.")
-        return
-
-    # Load and display original image
+    # Load and display original image immediately
     image = load_image(uploaded_file)
     col1, col2 = st.columns(2)
 
@@ -106,9 +108,17 @@ def main():
         st.subheader("📷 Original Image")
         st.image(image, use_column_width=True)
 
-        # Analyze image
+    if not st.session_state.enhance_ready:
+        with col2:
+            st.subheader("Ready to enhance")
+            st.info("✅ Select a goal and press Enhance to run the agent.")
+        return
+
+    # Analyze image
+    analysis = analyze_image(image)
+
+    with col1:
         st.subheader("📊 Image Analysis")
-        analysis = analyze_image(image)
         st.markdown(format_analysis(analysis))
 
     # Run agent and generate pipeline
